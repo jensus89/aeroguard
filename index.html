@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AEROGUARD – UAS Operations</title>
+<meta name="theme-color" content="#080A0D"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080A0D;--bg2:#11151A;--card:#191F26;--gold:#C6A04A;--gold2:#E2C46D;--tx:#fff;--tx2:#A4ADB7;--ok:#32B879;--warn:#F0AA36;--bad:#DC4545;--ln:#27303a;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.45 Inter,Roboto,system-ui,sans-serif;padding-bottom:84px}
+header{position:sticky;top:0;z-index:1000;background:var(--bg2);border-bottom:1px solid var(--gold);display:flex;gap:14px;align-items:center;padding:10px 16px;flex-wrap:wrap}
+.logo{font-weight:700;letter-spacing:.14em;color:var(--gold2);font-size:18px}.logo small{display:block;font-size:10px;letter-spacing:.3em;color:var(--tx2);font-weight:500}
+header .sp{flex:1}#zone{cursor:pointer;color:var(--tx);border-bottom:1px dotted var(--tx2)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);margin-right:6px}.off .dot{background:var(--bad)}
+#offbar{display:none;background:var(--bad);color:#fff;text-align:center;padding:6px;font-weight:600}
+main{max-width:1280px;margin:0 auto;padding:16px}section{display:none}section.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:16px}.card.sel{border-color:var(--gold)}
+.card h2,h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--gold2)}
+.big{font-size:22px;font-weight:600}.mut{color:var(--tx2);font-size:13px}.num{font-variant-numeric:tabular-nums}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+button,.btn{background:var(--card);color:var(--tx);border:1px solid var(--gold);border-radius:10px;padding:9px 14px;font:600 13px Inter,sans-serif;cursor:pointer;text-decoration:none;display:inline-block}
+button.gold,.btn.gold{background:var(--gold);color:#080A0D}button.ghost{border-color:var(--ln);color:var(--tx2)}button:hover{filter:brightness(1.12)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+input,select,textarea{background:var(--bg);color:var(--tx);border:1px solid var(--ln);border-radius:8px;padding:8px;font:14px Inter,sans-serif;width:100%}
+label{display:block;font-size:12px;color:var(--tx2);margin:8px 0}label input[type=checkbox]{width:auto;margin-right:8px}
+textarea{min-height:60px}
+.b{display:inline-block;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600;border:1px solid}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}.b.ok{border-color:var(--ok)}.b.warn{border-color:var(--warn)}.b.bad{border-color:var(--bad)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.kv div b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+.chart{width:100%;height:auto;margin-top:8px}.leg{font-size:12px;color:var(--tx2)}
+.kp{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px;margin-top:8px}.kp div{border-radius:8px;padding:5px 2px;text-align:center;font-size:11px;background:var(--bg)}.kp b{display:block;font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--ln)}th{color:var(--gold2);font-weight:600}
+.tw{overflow-x:auto}#map{height:56vh;min-height:340px;border-radius:14px;border:1px solid var(--gold)}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.tools .card{padding:12px}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:1000;background:var(--bg2);border-top:1px solid var(--gold);display:flex;padding-bottom:env(safe-area-inset-bottom,0)}
+nav button{flex:1;border:0;border-radius:0;background:none;color:var(--tx2);display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;font-size:11px;font-weight:500}
+nav button.on{color:var(--gold2);box-shadow:inset 0 2px 0 var(--gold)}nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+dialog{background:var(--card);color:var(--tx);border:1px solid var(--gold);border-radius:14px;width:min(520px,94vw);max-height:90vh;overflow:auto}dialog::backdrop{background:#000a}
+.step{border-left:2px solid var(--gold);padding-left:14px;margin:18px 0}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ck{display:grid;grid-template-columns:1fr 160px;gap:8px;align-items:center;border-bottom:1px solid var(--ln);padding:5px 0}
+#print{display:none}
+@media(max-width:560px){.two{grid-template-columns:1fr}.ck{grid-template-columns:1fr}}
+@media print{body>*:not(#print){display:none!important}#print{display:block;background:#fff;color:#000;font:11pt Arial,sans-serif}#print h1{font-size:18pt}#print h2{font-size:13pt;border-bottom:1px solid #000;margin-top:16px;color:#000}#print table{border:1px solid #999}#print th,#print td{border:1px solid #999;color:#000}body{background:#fff;padding:0}}
+body.locked>header,body.locked>main,body.locked>nav,body.locked #offbar{display:none}
+#lg{display:none;position:fixed;inset:0;z-index:3000;background:radial-gradient(circle at 50% 30%,#1a2029,#080A0D 70%);align-items:center;justify-content:center;padding:16px}
+body.locked #lg{display:flex}#lg form{width:min(380px,100%);background:var(--card);border:1px solid var(--gold);border-radius:16px;padding:28px}
+#lg .logo{font-size:26px;text-align:center;margin-bottom:6px}#lg p{text-align:center;margin:0 0 14px}#lerr{min-height:22px;font-size:13px;margin:4px 0 8px}
+</style></head><body class="locked">
+<div id="lg"><form onsubmit="return doLogin(event)"><div class="logo">AEROGUARD<small>UAS OPERATIONS</small></div><p class="mut">Toegang enkel voor bevoegde gebruikers</p><label>Paswoord<input type="password" id="pw" autocomplete="current-password" autofocus></label><div id="lerr" class="bad" role="alert"></div><button class="gold" style="width:100%">TOEGANG</button></form></div>
+<header><div class="logo">AEROGUARD<small>UAS OPERATIONS</small></div><div id="zone" title="Klik om de naam te wijzigen"></div><div class="sp"></div><div id="clock" class="num mut"></div><button class="ghost" onclick="lock()" style="padding:5px 10px">Afmelden</button><div id="net" class="mut"><span class="dot"></span><span id="nettx">Online</span></div></header>
+<div id="offbar">OFFLINE – ACTUELE GEGEVENS NIET BESCHIKBAAR</div>
+<main>
+<section id="s-dash" class="on">
+ <div class="grid">
+  <div class="card"><h2>Operationele locatie</h2><div id="loc"></div>
+   <div class="row"><button class="gold" onclick="gps()">MIJN LOCATIE</button><button onclick="pickMode()">LOCATIE KIEZEN</button></div>
+   <div class="row"><input id="ll" placeholder="lat, lon (bv. 50.8758, 4.7027)" style="flex:1"><button onclick="manual()">Toepassen</button></div>
+   <div class="mut">GPS vraagt toestemming van de browser en werkt enkel via https of localhost.</div></div>
+  <div class="card"><h2>Weer en wind</h2><div class="row"><label style="margin:0;flex:1">Tijdstip<select id="hour" onchange="H=+this.value;renderWeather()"></select></label><label style="margin:0;width:110px">Hoogte (m)<input id="alt" type="number" min="0" value="50" onchange="S.alt=+this.value;save();renderWeather()"></label></div>
+   <label>Drone voor windcontrole<select id="wdrone" onchange="S.drone=this.value;save();renderWeather()"></select></label><div id="wx"></div></div>
+  <div class="card"><h2>Kp-index (NOAA SWPC)</h2><div id="kp"></div></div>
+  <div class="card"><h2>Obstakels binnen 8 km</h2><div id="obs"></div><div class="row"><button class="gold" onclick="tab('kaart')">BEKIJK OBSTAKELKAART</button></div></div>
+  <div class="card"><h2>Aandachtspunten</h2><div id="alerts"></div></div>
+ </div>
+ <div class="card" style="margin-top:14px"><h2>Wind: 10 m, 80 m en stoten</h2><div id="chart"></div></div>
+ <h3 style="margin:22px 0 8px">Operationele tools</h3><div class="tools" id="tools"></div>
+ <div class="mut" style="margin-top:8px">DroneGuide, AIP en NOTAM kunnen verschillende informatie bevatten: controleer altijd de actuele voorwaarden. ADS-B toont niet alle luchtvaartuigen en is geen gecertificeerd detect-and-avoid-systeem; gebruik het nooit als enige bron.</div>
+</section>
+
+<section id="s-pre">
+ <div class="row"><h2 style="margin:0;flex:1;color:var(--gold2)">Preflight</h2><button class="ghost" onclick="clearForm()">Nieuw formulier</button></div>
+ <form id="pf" class="card" oninput="draft()">
+  <div class="step"><h3>Stap 1: Operationele gegevens</h3><div class="two"><label>Datum<input type="date" name="date" required></label><label>Startuur<input type="time" name="start" required></label><label>Geplande eindtijd<input type="time" name="end"></label><label>Operationele locatie<input name="place"></label></div>
+   <label>Aard van de operatie<select name="type"><option>SAR / zoekactie</option><option>Vermiste persoon</option><option>Verkeersongeval</option><option>Verkeerssituatie</option><option>Ordedienst</option><option>Evenement</option><option>Observatie</option><option>Algemene ondersteuning</option><option>Andere</option></select></label>
+   <label>Omschrijving van de opdracht<textarea name="desc"></textarea></label><div class="mut" id="pfloc"></div></div>
+  <div class="step"><h3>Stap 2: Piloot</h3><select name="pilot" id="pfpilot" onchange="pinfo()"></select><div id="pinfo" style="margin-top:8px"></div></div>
+  <div class="step"><h3>Stap 3: Drone(s)</h3><div class="two"><label>Drone<select name="drone" id="pfdrone" onchange="dinfo()"></select></label><label>Tweede drone (optioneel)<select name="drone2" id="pfdrone2" onchange="dinfo()"></select></label></div><div id="dinfo"></div></div>
+  <div class="step"><h3>Stap 4: Weer en Kp</h3><div id="pfwx" class="mut">Wordt bij het opslaan vastgelegd voor het opgegeven startuur.</div></div>
+  <div class="step"><h3>Stap 5: Luchtruimcontrole</h3><div class="row"><a class="btn gold" href="https://map.droneguide.be/" target="_blank" rel="noopener">OPEN OFFICIËLE DRONEGUIDE-KAART</a><a class="btn" href="https://ops.skeyes.be/opersite/notamsummary.do?cmd=summaryToHtml" target="_blank" rel="noopener">NOTAM</a><a class="btn" href="https://ops.skeyes.be/html/belgocontrol_static/eaip/eAIP_Product/index.html" target="_blank" rel="noopener">AIP België</a></div>
+   <div class="two"><label>Controle uitgevoerd<select name="dg_done"><option>nee</option><option>ja</option></select></label><label>Datum en tijd controle<input type="datetime-local" name="dg_time"></label><label>Betrokken geozone(s)<input name="dg_zones"></label><label>CTR aanwezig<select name="dg_ctr"><option>onbekend</option><option>ja</option><option>nee</option></select></label><label>Andere geozones<input name="dg_other"></label><label>Hoogtebeperking<input name="dg_alt"></label><label>Toegangsvoorwaarden<input name="dg_cond"></label><label>Vluchtautorisatie nodig<select name="dg_need"><option>onbekend</option><option>ja</option><option>nee</option></select></label><label>Autorisatie verkregen<select name="dg_auth"><option>niet van toepassing</option><option>ja</option><option>nee</option></select></label><label>Referentienummer<input name="dg_ref"></label></div>
+   <label>Opmerkingen luchtruim / NOTAM<textarea name="dg_rem"></textarea></label>
+   <label><input type="checkbox" name="dg_confirm">Ik heb de officiële DroneGuide-kaart geraadpleegd voor de exacte operationele locatie en de voorwaarden gecontroleerd.</label></div>
+  <div class="step"><h3>Stap 6: Obstakels (8 km)</h3><div id="pfobs" class="mut"></div></div>
+  <div class="step"><h3>Stap 7: Risicoanalyse</h3><div id="ck"></div><label>Opmerkingen risicoanalyse<textarea name="ck_rem"></textarea></label></div>
+  <div class="step"><h3>Stap 8: Besluit en opmerkingen</h3><label>Voorlopige operationele beoordeling<select name="assess"><option>Geen bijkomende aandachtspunten geregistreerd</option><option>Bijkomende maatregelen noodzakelijk</option><option>Operatie voorlopig niet uitvoeren</option><option>Verdere controle of toestemming noodzakelijk</option></select></label>
+   <label>Operationele beoordeling / opmerkingen piloot<textarea name="assess_rem"></textarea></label><label>Verantwoordelijke (indien van toepassing)<input name="resp"></label>
+   <div class="mut">Deze app geeft geen wettelijke toestemming of vluchtvrijgave. De beslissing blijft bij de bevoegde piloot en verantwoordelijke.</div></div>
+  <div class="step"><h3>Stap 9: Opslaan</h3><div class="row"><button type="button" onclick="savePf(false)">PREFLIGHT OPSLAAN</button><button type="button" class="gold" onclick="savePf(true)">OPSLAAN EN PDF GENEREREN</button></div><div class="mut">Elke opslag maakt een nieuw rapport aan; bestaande rapporten worden nooit overschreven. In het printvenster kies je "Opslaan als PDF".</div></div>
+ </form>
+ <h3 style="margin:22px 0 8px">Rapportenarchief</h3><input id="rq" placeholder="Zoek op nummer, locatie, piloot, drone…" oninput="renderReports()"><div class="tw card" style="margin-top:10px" id="reports"></div>
+</section>
+
+<section id="s-map">
+ <div class="row"><b style="color:var(--gold2)">Obstakelkaart, straal 8 km</b><span id="pickmsg" class="b warn" hidden>Tik op de kaart om de locatie te kiezen</span></div>
+ <div id="map"></div>
+ <div class="row"><label style="margin:0"><input type="checkbox" id="f50" checked onchange="S.only50=this.checked;save();renderObst()">Alleen &gt; 50 m (onbekende hoogte blijft zichtbaar)</label>
+  <select id="ftype" onchange="renderObst()" style="width:auto"><option value="all">Alles</option><option value="power">Hoogspanningsmasten</option><option value="mast">Zendmasten en antennes</option><option value="wind">Windmolens</option><option value="other">Overige hoge constructies</option><option value="unk">Hoogte onbekend</option></select>
+  <select id="fsort" onchange="renderObst()" style="width:auto"><option value="d">Sorteer: afstand</option><option value="h">Hoogte</option><option value="t">Type</option></select></div>
+ <div id="legend" class="leg"></div>
+ <div class="card tw" style="margin-top:10px" id="olist"></div>
+ <div class="mut" style="margin-top:8px">Bron: OpenStreetMap via Overpass. Dit is geen volledige of officiële inventaris. Hoogtes worden enkel getoond wanneer ze in de brongegevens staan. GRB, Elia en regionale zendmast- en windturbinedatasets zijn nog niet gekoppeld.</div>
+</section>
+
+<section id="s-team">
+ <div class="row"><h2 style="margin:0;flex:1;color:var(--gold2)">Piloten</h2><button class="gold" onclick="editPilot()">NIEUWE PILOOT</button></div><div class="grid" id="pilots"></div>
+ <div class="row" style="margin-top:22px"><h2 style="margin:0;flex:1;color:var(--gold2)">Drones</h2><button class="gold" onclick="editDrone()">NIEUWE DRONE</button></div><div class="grid" id="drones"></div>
+ <div class="card" style="margin-top:22px"><h3>Back-up</h3><div class="mut">Gegevens staan enkel in deze browser. Maak regelmatig een back-up; bestanden (documenten, attesten) zitten niet in de back-up.</div><div class="row"><button onclick="exportData()">Back-up downloaden</button><label class="btn ghost" style="margin:0">Back-up inlezen<input type="file" accept=".json" hidden onchange="importData(this.files[0])"></label></div></div>
+</section>
+
+<section id="s-docs">
+ <div class="row"><h2 style="margin:0;flex:1;color:var(--gold2)">Document center</h2><button class="gold" onclick="editDoc()">DOCUMENT TOEVOEGEN</button></div>
+ <div class="card sel" style="margin-bottom:12px"><div class="row"><b style="flex:1">Operationeel handboek</b><button class="gold" onclick="openManual()">OPERATIONEEL HANDBOEK OPENEN</button></div><div class="mut">Opgeslagen bestanden blijven offline beschikbaar op dit toestel.</div></div>
+ <div class="row"><input id="dq" placeholder="Zoek op naam" oninput="renderDocs()" style="flex:1"><select id="dcat" onchange="renderDocs()" style="width:auto"></select></div>
+ <div class="card tw" id="docs"></div>
+</section>
+</main>
+<nav id="nav"></nav><div id="print"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S;try{S=JSON.parse(localStorage.getItem('ag')||'{}')}catch(e){S={}}
+S={pilots:[],drones:[],docs:[],reports:[],zone:'Politiezone (klik om te wijzigen)',loc:null,drone:'',alt:50,only50:true,draft:null,...S};
+const save=()=>{try{localStorage.setItem('ag',JSON.stringify(S))}catch(e){alert('Opslaan mislukt: de opslag van de browser is vol.')}};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const ago=t=>new Date(t).toLocaleString('nl-BE');
+const stale=r=>r&&r.stale?` <span class="b bad">VEROUDERD, opgehaald ${ago(r.t)}</span>`:'';
+const CAT=['Operationeel handboek','Verzekeringen','Dronecertificaten en CE-documentatie','Pilotenattesten','Operationele toelatingen','Risicoanalyses','Checklists','Onderhoudsdocumenten','Wetgeving en regelgeving','Andere documenten'];
+const TOOLS=[['DroneGuide','Belgische geozones en luchtruimcontrole.','https://map.droneguide.be/'],['OsmAnd','Geavanceerde kaart en geografische ondersteuning.','https://osmand.net/map/#9/50.8758/4.7027'],['ADS-B Exchange','Live luchtverkeer. Niet alle toestellen zijn zichtbaar.','https://globe.adsbexchange.com/'],['AIP België','Luchtvaartpublicatie van skeyes.','https://ops.skeyes.be/html/belgocontrol_static/eaip/eAIP_Product/index.html'],['NOTAM','Actuele NOTAM-samenvatting.','https://ops.skeyes.be/opersite/notamsummary.do?cmd=summaryToHtml'],['skeyes','Informatie over drones en luchtactiviteiten.','https://www.skeyes.be/']];
+const IC={dash:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',pre:'<path d="M9 11l3 3 8-8M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9"/>',kaart:'<path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',team:'<circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0114 0M16 4.5a3.5 3.5 0 010 7M18 14a7 7 0 013 7"/>',docs:'<path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h8"/>'};
+const NAV=[['dash','Dashboard'],['pre','Preflight'],['kaart','Kaart'],['team','Team & materiaal'],['docs','Documenten']];
+const ID={dash:'s-dash',pre:'s-pre',kaart:'s-map',team:'s-team',docs:'s-docs'};
+$('#nav').innerHTML=NAV.map(([k,l])=>`<button data-t="${k}" onclick="tab('${k}')"><svg viewBox="0 0 24 24">${IC[k]}</svg>${l}</button>`).join('');
+function tab(k){$$('section').forEach(s=>s.classList.toggle('on',s.id==ID[k]));$$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==k));if(k=='kaart')initMap();if(k=='pre'){fillSelects();pinfo();dinfo();pfInfo()}scrollTo(0,0)}
+/* ---------- netwerk + cache ---------- */
+async function getJSON(k,url,opt,tf){try{const c=new AbortController(),t=setTimeout(()=>c.abort(),20000);const r=await fetch(url,{...opt,signal:c.signal});clearTimeout(t);if(!r.ok)throw new Error('HTTP '+r.status);let d=await r.json();if(tf)d=tf(d);try{localStorage.setItem('agc_'+k,JSON.stringify({t:Date.now(),d}))}catch(e){}return{d,t:Date.now(),stale:false}}catch(e){let c=null;try{c=JSON.parse(localStorage.getItem('agc_'+k))}catch(_){}return c?{d:c.d,t:c.t,stale:true,err:e.message}:{err:e.message}}}
+function net(){const on=navigator.onLine;$('#offbar').style.display=on?'none':'block';$('#nettx').textContent=on?'Online':'Offline';$('#net').classList.toggle('off',!on)}
+addEventListener('online',()=>{net();refresh()});addEventListener('offline',net);net();
+function clock(){$('#clock').textContent=new Date().toLocaleString('nl-BE',{dateStyle:'medium',timeStyle:'short'})}setInterval(clock,30000);clock();
+$('#zone').textContent=S.zone;$('#zone').onclick=()=>{const z=prompt('Naam politiezone',S.zone);if(z){S.zone=z;save();$('#zone').textContent=z}};
+/* ---------- locatie ---------- */
+const dist=(a,b,c,d)=>{const R=6371008.8,r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b),h=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
+function setLoc(lat,lon,acc,src){S.loc={lat,lon,acc,src,time:Date.now()};save();renderLoc();refresh();geo()}
+async function geo(){const{lat,lon}=S.loc;const r=await getJSON('g'+lat.toFixed(3)+lon.toFixed(3),`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=nl&lat=${lat}&lon=${lon}`);const a=r.d&&r.d.address;if(a&&S.loc&&S.loc.lat==lat){S.loc.place=a.village||a.town||a.city||a.municipality||a.county||'';save();renderLoc()}}
+function gps(){if(!navigator.geolocation)return alert('GPS is niet beschikbaar in deze browser. Kies een locatie op de kaart.');navigator.geolocation.getCurrentPosition(p=>setLoc(p.coords.latitude,p.coords.longitude,p.coords.accuracy,'GPS'),e=>alert('GPS mislukt ('+e.message+'). Kies een locatie op de kaart of voer coördinaten in.'),{enableHighAccuracy:true,timeout:20000,maximumAge:0})}
+function manual(){const m=$('#ll').value.match(/(-?\d+(?:[.,]\d+)?)\s*[;, ]\s*(-?\d+(?:[.,]\d+)?)/);if(!m)return alert('Gebruik het formaat: 50.8758, 4.7027');const a=+m[1].replace(',','.'),b=+m[2].replace(',','.');if(Math.abs(a)>90||Math.abs(b)>180)return alert('Ongeldige coördinaten.');setLoc(a,b,null,'Manueel')}
+function pickMode(){pick=true;tab('kaart');$('#pickmsg').hidden=false}
+function renderLoc(){const l=S.loc;$('#loc').innerHTML=l?`<div class="big">${esc(l.place||'Locatie')}</div><div class="mut num">${l.lat.toFixed(6)} / ${l.lon.toFixed(6)}</div><div class="mut">Bron: ${l.src}${l.acc?', nauwkeurigheid ±'+Math.round(l.acc)+' m':''}</div><div class="mut">Bepaald op ${ago(l.time)}</div>`:'<div class="mut">Nog geen locatie. Gebruik Mijn locatie of kies een punt op de kaart.</div>'}
+/* ---------- weer ---------- */
+let W=null,H=0;
+const WC=c=>c==0?'Helder':c<=3?'Wisselend bewolkt':c<=48?'Mist':c<=57?'Motregen':c<=67?'Regen':c<=77?'Sneeuw':c<=82?'Buien':c>=95?'Onweer':'Neerslag';
+async function loadWeather(){if(!S.loc){W=null;return renderWeather()}const{lat,lon}=S.loc;W=await getJSON('w'+lat.toFixed(2)+lon.toFixed(2),`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,precipitation,visibility,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,wind_speed_80m,wind_direction_80m&wind_speed_unit=ms&timezone=Europe/Brussels&forecast_days=7`);if(W.d){const t=W.d.hourly.time;H=Math.max(0,t.findIndex(x=>new Date(x)>=Date.now()-36e5))}renderWeather()}
+const kmh=v=>(v*3.6).toFixed(0);
+function wstat(sp,g,d){if(!d)return null;const lim=+d.maxwind||0,gl=+d.maxgust||0,w=(+d.warnpct||80)/100;if(!lim)return['Geen windlimiet ingesteld voor dit toestel','warn'];if(sp>=lim||(gl&&g>=gl))return['ROOD: ingestelde limiet bereikt of overschreden','bad'];if(sp>=lim*w||(gl&&g>=gl*w))return['ORANJE: naderende limiet','warn'];return['GROEN: onder de waarschuwingsgrens','ok']}
+const hoursOf=()=>W&&W.d?W.d.hourly:null;
+function compass(deg){return `<svg viewBox="0 0 100 100" width="96" height="96"><circle cx="50" cy="50" r="44" fill="none" stroke="#27303a" stroke-width="2"/><g fill="#A4ADB7" font-size="10" text-anchor="middle"><text x="50" y="14">N</text><text x="88" y="54">O</text><text x="50" y="94">Z</text><text x="12" y="54">W</text></g><g transform="rotate(${(deg+180)%360} 50 50)"><path d="M50 22 L58 56 L50 50 L42 56Z" fill="#E2C46D"/></g></svg>`}
+function renderWeather(){const sel=$('#wdrone');sel.innerHTML='<option value="">Geen drone gekozen</option>'+S.drones.map(d=>`<option value="${d.id}" ${S.drone==d.id?'selected':''}>${esc(d.make)} ${esc(d.model)}</option>`).join('');$('#alt').value=S.alt;
+ if(!S.loc){$('#wx').innerHTML='<div class="mut">Kies eerst een locatie.</div>';$('#chart').innerHTML='';return}
+ if(!W||!W.d){$('#wx').innerHTML=`<div class="bad">Weerdata niet beschikbaar${W?': '+esc(W.err):''}.</div><div class="mut">Er is geen eerder opgehaalde voorspelling voor deze locatie.</div>`;$('#chart').innerHTML='';return}
+ const h=W.d.hourly,c=W.d.current,i=H;$('#hour').innerHTML=h.time.slice(0,96).map((t,j)=>`<option value="${j}" ${j==i?'selected':''}>${new Date(t).toLocaleString('nl-BE',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</option>`).join('');
+ const near=Math.abs(S.alt-10)<=Math.abs(S.alt-80)?10:80,sp=h['wind_speed_'+near+'m'][i],dr=h['wind_direction_'+near+'m'][i],g=h.wind_gusts_10m[i],drone=S.drones.find(d=>d.id==S.drone),st=wstat(sp,g,drone);
+ $('#wx').innerHTML=`${stale(W)}<div class="row"><div>${compass(dr)}</div><div class="kv" style="flex:1"><div class="mut">Wind 10 m<b>${h.wind_speed_10m[i]} m/s</b>${kmh(h.wind_speed_10m[i])} km/u</div><div class="mut">Wind 80 m<b>${h.wind_speed_80m[i]} m/s</b>${kmh(h.wind_speed_80m[i])} km/u</div><div class="mut">Stoten 10 m<b>${g} m/s</b>${kmh(g)} km/u</div><div class="mut">Richting<b>${dr}°</b>vanuit</div></div></div>
+ <div class="mut">Gekozen hoogte ${S.alt} m: dichtstbijzijnde ondersteunde niveau is ${near} m. Er wordt niet geïnterpoleerd. Windgegevens op 80 m zijn een modelvoorspelling, geen meting op de werkelijke vlieghoogte.</div>
+ ${st?`<p class="${st[1]}"><b>${st[0]}</b></p><div class="mut">Gebaseerd op de limieten die jullie voor dit toestel instelden. Een fabrikantslimiet is niet automatisch een veilige operationele limiet.</div>`:'<p class="mut">Kies een drone om de windlimieten te controleren.</p>'}
+ <div class="kv" style="margin-top:10px"><div class="mut">Temperatuur<b>${h.temperature_2m[i]} °C</b></div><div class="mut">Neerslag<b>${h.precipitation[i]} mm</b>kans ${h.precipitation_probability[i]??'?'}%</div><div class="mut">Zicht<b>${h.visibility[i]!=null?(h.visibility[i]/1000).toFixed(1)+' km':'?'}</b></div><div class="mut">Bewolking<b>${h.cloud_cover[i]}%</b></div></div>
+ <div class="mut" style="margin-top:8px">Nu: ${c.temperature_2m} °C, ${WC(c.weather_code)}, wind ${c.wind_speed_10m} m/s, stoten ${c.wind_gusts_10m} m/s (${esc(c.time)}).</div>`;
+ const n=Math.min(72,h.time.length-i),Y=[['wind_speed_10m','#C6A04A','Wind 10 m'],['wind_gusts_10m','#DC4545','Stoten 10 m'],['wind_speed_80m','#32B879','Wind 80 m']],mx=Math.max(5,...Y.flatMap(([k])=>h[k].slice(i,i+n).map(v=>v??0)))*1.1,w=700,ht=210,p=30,X=j=>p+j*(w-p-8)/(n-1),Yy=v=>ht-24-v/mx*(ht-38);let gr='';
+ for(let k=0;k<=4;k++){const v=mx*k/4;gr+=`<line x1="${p}" x2="${w-8}" y1="${Yy(v)}" y2="${Yy(v)}" stroke="#27303a"/><text x="2" y="${Yy(v)+4}" fill="#A4ADB7" font-size="10">${v.toFixed(0)}</text>`}
+ for(let j=0;j<n;j+=6){const t=h.time[i+j];gr+=`<text x="${X(j)}" y="${ht-6}" fill="#A4ADB7" font-size="10" text-anchor="middle">${t.slice(8,10)}/${t.slice(5,7)} ${t.slice(11,13)}u</text>`}
+ $('#chart').innerHTML=`<svg viewBox="0 0 ${w} ${ht}" class="chart">${gr}<text x="${w-8}" y="12" fill="#A4ADB7" font-size="10" text-anchor="end">m/s</text>${Y.map(([k,c])=>`<polyline fill="none" stroke="${c}" stroke-width="2" points="${Array.from({length:n},(_,j)=>X(j)+','+Yy(h[k][i+j]??0)).join(' ')}"/>`).join('')}</svg><div class="leg">${Y.map(([,c,l])=>`<span style="color:${c}">■</span> ${l}`).join(' &nbsp; ')} (volgende ${n} uur)</div>`}
+/* ---------- Kp ---------- */
+let K=null;
+const tparse=t=>new Date(String(t).replace(' ','T')+(/Z$|[+-]\d\d:?\d\d$/.test(t)?'':'Z'));
+function parseKp(d){if(!Array.isArray(d))return[];let rows=d;if(Array.isArray(d[0])){const hd=d[0].map(String);rows=d.slice(1).map(r=>Object.fromEntries(hd.map((k,i)=>[k,r[i]])))}return rows.map(r=>({t:r.time_tag??r.timeTag,kp:parseFloat(r.kp??r.Kp??r.kp_index),obs:r.observed||''})).filter(r=>r.t&&Number.isFinite(r.kp))}
+const kcol=k=>k>=5?'bad':k>=4?'warn':'ok';
+async function loadKp(){const a=await getJSON('kp1','https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json',null,d=>parseKp(d).slice(-80)),b=await getJSON('kp2','https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json',null,d=>parseKp(d).slice(-90));K={a,b};renderKp()}
+function renderKp(){if(!K||(!K.a.d&&!K.b.d)){$('#kp').innerHTML=`<div class="bad">Kp-gegevens niet beschikbaar${K?': '+esc(K.a.err||K.b.err):''}.</div>`;return}
+ const a=K.a.d||[],f=(K.b.d||[]).filter(r=>tparse(r.t)>Date.now()-3*36e5).slice(0,16),l=a[a.length-1]||null;
+ $('#kp').innerHTML=`${stale(K.a.stale?K.a:K.b)}${l?`<div class="big ${kcol(l.kp)}">Kp ${l.kp}</div><div class="mut">Laatste meetperiode: ${ago(tparse(l.t))} (lokale tijd)</div>`:''}<div class="kp">${f.map(r=>`<div style="border-bottom:3px solid var(--${kcol(r.kp)==='ok'?'ok':kcol(r.kp)})">${tparse(r.t).toLocaleString('nl-BE',{weekday:'short',hour:'2-digit'})}<b>${r.kp}</b>${r.obs?r.obs.slice(0,3):''}</div>`).join('')}</div>
+ ${Math.max(l?l.kp:0,...f.map(r=>r.kp))>=5?'<p class="bad">Verhoogde geomagnetische activiteit: let extra op GNSS-betrouwbaarheid en volg de geldende procedures.</p>':''}<div class="mut">Informatief. De Kp-index is geen zelfstandige vliegverbodsregel.</div>`}
+/* ---------- obstakels ---------- */
+const TY={power:['Hoogspanningsmast','⚡','#E2C46D'],mast:['Zendmast / antenne','📡','#4EA8DE'],wind:['Windturbine','✦','#32B879'],water:['Watertoren','◉','#8FB8DE'],chimney:['Schoorsteen','▮','#C98B63'],other:['Overige constructie','◆','#A4ADB7']};
+let O=null;
+function parseObst(d,c){return(d.elements||[]).map(e=>{const t=e.tags||{},la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null)return null;let ty='other';if(t['generator:source']=='wind')ty='wind';else if(t.power=='tower')ty='power';else if(t.man_made=='water_tower')ty='water';else if(t.man_made=='chimney')ty='chimney';else if(['mast','communications_tower'].includes(t.man_made)||['communication','radar'].includes(t['tower:type']))ty='mast';let h=parseFloat(String(t.height||'').replace(',','.'));if(!Number.isFinite(h))h=null;return{id:e.type[0]+e.id,ty,name:t.name||t.ref||'',op:t.operator||'',lat:la,lon:lo,h,d:Math.round(dist(c.lat,c.lon,la,lo))}}).filter(o=>o&&o.d<=8000)}
+async function loadObst(){if(!S.loc){O=null;return renderObst()}const c={...S.loc},{lat,lon}=c,a=`(around:8000,${lat},${lon})`,m='"^(mast|tower|chimney|water_tower|communications_tower)$"';
+ const q=`[out:json][timeout:30];(node${a}[power=tower];way${a}[power=tower];node${a}[man_made~${m}];way${a}[man_made~${m}];node${a}["generator:source"="wind"];way${a}["generator:source"="wind"];node${a}["tower:type"];);out center tags 2000;`;
+ $('#obs').innerHTML='<div class="mut">Obstakels ophalen…</div>';O=await getJSON('o'+lat.toFixed(3)+lon.toFixed(3),'https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q)},d=>parseObst(d,c));renderObst()}
+function filt(){if(!O||!O.d)return[];const ft=$('#ftype').value,f50=$('#f50').checked=S.only50;let l=O.d.filter(o=>ft=='all'||(ft=='unk'?o.h==null:ft=='other'?['water','chimney','other'].includes(o.ty):o.ty==ft));if(f50&&ft!='unk')l=l.filter(o=>o.h==null||o.h>50);const s=$('#fsort').value;return l.sort((a,b)=>s=='h'?(b.h??-1)-(a.h??-1):s=='t'?a.ty.localeCompare(b.ty)||a.d-b.d:a.d-b.d)}
+const pop=(o,i)=>`<b>OBSTAKEL #${String(i+1).padStart(3,'0')}</b><br>Type: ${TY[o.ty][0]}<br>Naam: ${esc(o.name||o.op||'niet vermeld')}<br>Hoogte: ${o.h==null?'<b>ONBEKEND</b> (niet in brongegevens)':o.h+' m (OSM-tag, niet officieel bevestigd)'}<br>Afstand: ${o.d.toLocaleString('nl-BE')} m<br>Positie: ${o.lat.toFixed(6)} / ${o.lon.toFixed(6)}<br>Bron: OpenStreetMap<br>Opgehaald: ${ago(O.t)}`;
+function renderObst(){const all=O&&O.d||[];
+ if(!S.loc)$('#obs').innerHTML='<div class="mut">Kies eerst een locatie.</div>';else if(!O||!O.d)$('#obs').innerHTML=`<div class="bad">Obstakelgegevens niet beschikbaar${O?': '+esc(O.err):''}.</div><div class="mut">Er zijn geen eerder opgehaalde gegevens voor deze locatie.</div>`;
+ else{const cnt=k=>all.filter(o=>o.ty==k).length,kn=all.filter(o=>o.h!=null).sort((a,b)=>b.h-a.h)[0],nr=[...all].sort((a,b)=>a.d-b.d)[0];$('#obs').innerHTML=`${stale(O)}<div class="kv"><div class="mut">Hoogspanningsmasten<b>${cnt('power')}</b></div><div class="mut">Zendmasten / antennes<b>${cnt('mast')}</b></div><div class="mut">Windturbines<b>${cnt('wind')}</b></div><div class="mut">Overige<b>${cnt('water')+cnt('chimney')+cnt('other')}</b></div></div><div class="mut" style="margin-top:8px">Totaal ${all.length}. Hoogte onbekend: ${all.filter(o=>o.h==null).length}. Hoogste gekende: ${kn?kn.h+' m ('+TY[kn.ty][0]+')':'geen hoogte beschikbaar'}. Dichtstbijzijnde: ${nr?nr.d+' m ('+TY[nr.ty][0]+')':'-'}.</div><div class="mut">Bron: OpenStreetMap, niet volledig of officieel. Opgehaald ${ago(O.t)}.</div>`}
+ const l=filt();$('#olist').innerHTML=O&&O.d?`<table><tr><th>#</th><th>Type</th><th>Naam</th><th>Hoogte</th><th>Afstand</th><th>Bron</th></tr>${l.slice(0,300).map((o,i)=>`<tr><td>${i+1}</td><td>${TY[o.ty][1]} ${TY[o.ty][0]}</td><td>${esc(o.name||'-')}</td><td>${o.h==null?'<span class="warn">ONBEKEND</span>':o.h+' m'}</td><td class="num">${o.d} m</td><td>OSM</td></tr>`).join('')||'<tr><td colspan=6>Geen obstakels met deze filter.</td></tr>'}</table>${l.length>300?'<div class="mut">Eerste 300 van '+l.length+' getoond.</div>':''}`:'<div class="mut">Geen obstakelgegevens.</div>';
+ $('#legend').innerHTML=Object.values(TY).map(t=>`<span style="color:${t[2]}">●</span> ${t[0]}`).join(' &nbsp; ');drawMap(false);pfInfo()}
+/* ---------- kaart ---------- */
+let map,layer,pick=false;
+function initMap(){if(map){map.invalidateSize();return drawMap(true)}if(typeof L=='undefined'){$('#map').innerHTML='<p class="bad" style="padding:16px">Kaartbibliotheek kon niet geladen worden (offline?). De lijst hieronder blijft beschikbaar.</p>';return}
+ map=L.map('map').setView(S.loc?[S.loc.lat,S.loc.lon]:[50.85,4.35],S.loc?12:8);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap-bijdragers',maxZoom:19}).addTo(map);layer=L.layerGroup().addTo(map);
+ map.on('click',e=>{if(pick){pick=false;$('#pickmsg').hidden=true;setLoc(e.latlng.lat,e.latlng.lng,null,'Manueel (kaart)')}});drawMap(true)}
+function drawMap(fit){if(!map||!S.loc)return;layer.clearLayers();const{lat,lon}=S.loc,c=L.circle([lat,lon],{radius:8000,color:'#C6A04A',weight:2,fillOpacity:.04}).addTo(layer);L.marker([lat,lon]).addTo(layer).bindPopup('Operationele locatie');
+ filt().forEach((o,i)=>L.circleMarker([o.lat,o.lon],{radius:6,color:'#000',weight:1,fillColor:TY[o.ty][2],fillOpacity:1}).bindPopup(pop(o,i)).addTo(layer));if(fit)map.fitBounds(c.getBounds())}
+/* ---------- vervaldata ---------- */
+function exp(d){if(!d)return['Geen vervaldatum','ok'];const n=(new Date(d)-Date.now())/864e5;return n<0?['Verlopen','bad']:n<60?['Binnenkort vervallen','warn']:['Geldig','ok']}
+function cst(c){const e=exp(c.exp);if(e[1]=='bad')return e;if(!c.ver)return['Niet gecontroleerd','warn'];return e}
+function renderAlerts(){const a=[];S.pilots.forEach(p=>(p.certs||[]).forEach(c=>{const s=cst(c);if(s[1]!='ok')a.push([s,`${p.first} ${p.last}: ${c.type}`])}));S.docs.forEach(d=>{const s=exp(d.exp);if(s[1]!='ok'&&d.exp)a.push([s,`Document: ${d.name}`])});$('#alerts').innerHTML=a.length?a.map(([s,t])=>`<div><span class="b ${s[1]}">${s[0]}</span> ${esc(t)}</div>`).join('<div style="height:6px"></div>'):'<div class="ok">Geen vervallen of binnenkort vervallende documenten of attesten.</div>'}
+/* ---------- generiek dialoogvenster + IndexedDB ---------- */
+function dlg(title,fields,v,ok){const d=document.createElement('dialog');d.innerHTML=`<form><h3>${title}</h3>${fields.map(([k,l,t,o])=>`<label>${l}${t=='select'?`<select name="${k}">${o.map(x=>`<option ${v[k]==x?'selected':''}>${esc(x)}</option>`).join('')}</select>`:t=='area'?`<textarea name="${k}">${esc(v[k])}</textarea>`:t=='file'?`<input type="file" name="${k}">`:t=='check'?`<input type="checkbox" name="${k}" ${v[k]?'checked':''}>`:`<input name="${k}" type="${t}" value="${esc(v[k])}">`}</label>`).join('')}<div class="row"><button class="gold">Opslaan</button><button type="button" class="ghost" id="x">Annuleren</button></div></form>`;document.body.append(d);d.showModal();$('#x').onclick=()=>{d.close();d.remove()};
+ d.querySelector('form').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),o={};fields.forEach(([k,,t])=>o[k]=t=='check'?f.has(k):f.get(k));if(await ok(o)!==false){d.close();d.remove()}}}
+const idb=new Promise((res,rej)=>{const r=indexedDB.open('ag',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const idbPut=async(k,v)=>{const d=await idb;return new Promise((res,rej)=>{const t=d.transaction('f','readwrite');t.objectStore('f').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})};
+const idbGet=async k=>{const d=await idb;return new Promise(res=>{const q=d.transaction('f').objectStore('f').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)})};
+const openFile=async k=>{const f=await idbGet(k);if(!f)return alert('Bestand niet gevonden op dit toestel.');window.open(URL.createObjectURL(f),'_blank')};
+async function storeFile(f,key){if(f&&f.size){try{await idbPut(key,f);return true}catch(e){alert('Upload mislukt: '+e.message);return false}}return null}
+/* ---------- team ---------- */
+const CT=['A1/A3','A2','STS-01','STS-02','Certified','Specifieke categorie','Exploitatiegerelateerde opleiding','Andere'];
+function renderTeam(){$('#pilots').innerHTML=S.pilots.map(p=>`<div class="card"><div class="big">${esc(p.first)} ${esc(p.last)}</div><div class="mut">${esc(p.fn)}, ${esc(p.role)}<br>${esc(p.phone)} ${esc(p.email)}</div><div style="margin:8px 0">${(p.certs||[]).map(c=>{const s=cst(c);return`<div><span class="b ${s[1]}">${s[0]}</span> ${esc(c.type)} ${esc(c.no)} <span class="mut">${c.exp?'tot '+c.exp:''}</span> ${c.file?`<a href="#" onclick="openFile('c${c.id}');return false" style="color:var(--gold2)">bestand</a>`:''} <a href="#" onclick="delCert('${p.id}','${c.id}');return false" class="mut">x</a></div>`}).join('')||'<div class="warn">Geen brevetten geregistreerd</div>'}</div><div class="row"><button onclick="editCert('${p.id}')">Brevet toevoegen</button><button class="ghost" onclick="editPilot('${p.id}')">Wijzigen</button><button class="ghost" onclick="del('pilots','${p.id}')">Verwijderen</button></div></div>`).join('')||'<div class="mut">Nog geen piloten. Voeg de eerste piloot toe.</div>';
+ $('#drones').innerHTML=S.drones.map(d=>`<div class="card"><div class="big">${esc(d.make)} ${esc(d.model)}</div><div class="mut">Serienr. ••••${esc(String(d.serial||'').slice(-4))}, ${esc(d.mtow)} g, klasse ${esc(d.cls)}<br>Status: ${esc(d.avail)}<br>Max. wind ${esc(d.maxwind)} m/s, stoten ${esc(d.maxgust||'-')} m/s, oranje vanaf ${esc(d.warnpct||80)}%<br>Payloads: ${esc(d.payloads)}<br>Batterijen: ${esc(d.bat)}</div><div class="row"><button class="ghost" onclick="editDrone('${d.id}')">Wijzigen</button><button class="ghost" onclick="del('drones','${d.id}')">Verwijderen</button></div></div>`).join('')||'<div class="mut">Nog geen drones. Voeg een toestel toe en vul de grenswaarden in op basis van de officiële fabrikantsdocumentatie.</div>'}
+function del(k,id){if(confirm('Verwijderen?')){S[k]=S[k].filter(x=>x.id!=id);save();renderAll()}}
+function editPilot(id){const p=S.pilots.find(x=>x.id==id)||{};dlg(id?'Piloot wijzigen':'Nieuwe piloot',[['first','Voornaam','text'],['last','Achternaam','text'],['fn','Functie','text'],['role','Operationele rol','text'],['phone','Telefoon','tel'],['email','E-mail','email'],['note','Opmerkingen','area']],p,o=>{if(!o.first||!o.last){alert('Voor- en achternaam zijn verplicht.');return false}if(id)Object.assign(p,o);else S.pilots.push({id:uid(),certs:[],...o});save();renderAll()})}
+function editCert(pid){dlg('Brevet of attest',[['type','Type','select',CT],['no','Nummer','text'],['issuer','Uitgevende instantie','text'],['issue','Uitgiftedatum','date'],['exp','Vervaldatum','date'],['ver','Gecontroleerd door bevoegde beheerder','check'],['file','Document (PDF, JPG, PNG)','file']],{},async o=>{const id=uid(),r=await storeFile(o.file,'c'+id);if(r===false)return false;const{file,...c}=o;S.pilots.find(p=>p.id==pid).certs.push({id,...c,file:!!r});save();renderAll()})}
+function delCert(pid,cid){const p=S.pilots.find(x=>x.id==pid);p.certs=p.certs.filter(c=>c.id!=cid);save();renderAll()}
+function editDrone(id){const d=S.drones.find(x=>x.id==id)||{avail:'Beschikbaar',warnpct:80};dlg(id?'Drone wijzigen':'Nieuwe drone',[['make','Fabrikant','text'],['model','Model','text'],['serial','Serienummer','text'],['reg','Registratienummer','text'],['cls','UAS-klasse','text'],['mtow','Max. startgewicht (g)','number'],['maxwind','Max. operationele wind (m/s)','number'],['maxgust','Max. windstoot (m/s)','number'],['warnpct','Oranje vanaf (% van limiet)','number'],['flt','Max. vliegtijd (min)','number'],['payloads','Payloads (RGB, thermisch, zoom…)','text'],['bat','Batterijen (aantal, type, status, cycli)','text'],['avail','Beschikbaarheid','select',['Beschikbaar','In onderhoud','Buiten dienst']],['note','Opmerkingen','area']],d,o=>{if(!o.make||!o.model){alert('Fabrikant en model zijn verplicht.');return false}if(id)Object.assign(d,o);else S.drones.push({id:uid(),...o});save();renderAll()})}
+/* ---------- documenten ---------- */
+function renderDocs(){const sel=$('#dcat');if(!sel.options.length)sel.innerHTML='<option value="">Alle categorieën</option>'+CAT.map(c=>`<option>${c}</option>`).join('');const q=$('#dq').value.toLowerCase(),c=sel.value;
+ const cur=d=>!S.docs.some(x=>x.name==d.name&&x.cat==d.cat&&parseFloat(x.ver)>parseFloat(d.ver));
+ const l=S.docs.filter(d=>(!c||d.cat==c)&&d.name.toLowerCase().includes(q));$('#docs').innerHTML=l.length?`<table><tr><th>Naam</th><th>Categorie</th><th>Versie</th><th>Vervalt</th><th></th></tr>${l.map(d=>{const e=exp(d.exp);return`<tr><td>${esc(d.name)}<div class="mut">${esc(d.desc)} ${esc(d.by?'('+d.by+', '+d.date+')':'')}</div></td><td>${esc(d.cat)}</td><td>${esc(d.ver)} ${cur(d)?'<span class="b ok">actueel</span>':'<span class="b warn">oude versie</span>'}</td><td>${d.exp?`<span class="b ${e[1]}">${d.exp}</span>`:'-'}</td><td><button onclick="openFile('d${d.id}')">Openen</button> <button class="ghost" onclick="del('docs','${d.id}')">x</button></td></tr>`}).join('')}</table>`:'<div class="mut">Geen documenten. Voeg het operationeel handboek, verzekeringen en andere documenten toe.</div>'}
+function editDoc(){dlg('Document toevoegen',[['name','Documentnaam','text'],['cat','Categorie','select',CAT],['desc','Omschrijving','text'],['by','Geüpload door','text'],['ver','Versienummer','text'],['exp','Vervaldatum','date'],['file','Bestand (PDF, DOCX, XLSX, JPG, PNG)','file']],{ver:'1'},async o=>{if(!o.name||!o.file||!o.file.size){alert('Naam en bestand zijn verplicht.');return false}const id=uid(),r=await storeFile(o.file,'d'+id);if(!r)return false;const{file,...d}=o;S.docs.push({id,...d,date:new Date().toLocaleDateString('nl-BE'),fname:file.name});save();renderAll()})}
+function openManual(){const l=S.docs.filter(d=>d.cat==CAT[0]).sort((a,b)=>parseFloat(b.ver)-parseFloat(a.ver));if(l[0])openFile('d'+l[0].id);else{alert('Nog geen operationeel handboek opgeladen.');editDoc()}}
+/* ---------- preflight ---------- */
+const CK=['Weersomstandigheden gecontroleerd','Windlimieten gecontroleerd','Windstoten gecontroleerd','Kp-index gecontroleerd','GNSS-omstandigheden beoordeeld','DroneGuide gecontroleerd','NOTAM gecontroleerd','Obstakels gecontroleerd','Hoogspanningsleidingen geïdentificeerd','Zendmasten en antennes gecontroleerd','Omgeving gecontroleerd','Grondrisico\'s beoordeeld','Niet-betrokken personen beoordeeld','Noodprocedure beschikbaar','Batterijen gecontroleerd','Toestel gecontroleerd','Verzekering gecontroleerd','Operationeel handboek geraadpleegd'];
+$('#ck').innerHTML=CK.map((t,i)=>`<div class="ck"><span>${t}</span><select name="c${i}"><option>OK</option><option>AANDACHTSPUNT</option><option>NIET IN ORDE</option></select></div>`).join('');
+function fillSelects(){const f=$('#pf'),keep=n=>f.elements[n].value;const pv=keep('pilot'),d1=keep('drone'),d2=keep('drone2');$('#pfpilot').innerHTML='<option value="">Kies een piloot</option>'+S.pilots.map(p=>`<option value="${p.id}">${esc(p.first)} ${esc(p.last)}</option>`).join('');const dopt=S.drones.map(d=>`<option value="${d.id}">${esc(d.make)} ${esc(d.model)}</option>`).join('');$('#pfdrone').innerHTML='<option value="">Kies een drone</option>'+dopt;$('#pfdrone2').innerHTML='<option value="">Geen</option>'+dopt;f.elements.pilot.value=pv;f.elements.drone.value=d1;f.elements.drone2.value=d2}
+function pinfo(){const p=S.pilots.find(x=>x.id==$('#pfpilot').value);$('#pinfo').innerHTML=p?`<div>${esc(p.fn)}, ${esc(p.phone)} ${esc(p.email)}</div>${(p.certs||[]).map(c=>{const s=cst(c);return`<div><span class="b ${s[1]}">${s[0]}</span> ${esc(c.type)} ${esc(c.no)}</div>`}).join('')||'<div class="warn">Geen brevetten geregistreerd</div>'}${(p.certs||[]).some(c=>cst(c)[1]!='ok')||!(p.certs||[]).length?'<p class="warn">Let op: ontbrekende, verlopen of niet-gecontroleerde attesten.</p>':''}`:''}
+function dinfo(){const f=$('#pf').elements;$('#dinfo').innerHTML=[f.drone.value,f.drone2.value].map(id=>S.drones.find(d=>d.id==id)).filter(Boolean).map(d=>`<div class="mut">${esc(d.make)} ${esc(d.model)}: ${esc(d.mtow)} g, klasse ${esc(d.cls)}, max. wind ${esc(d.maxwind)} m/s, payloads ${esc(d.payloads)}, batterijen ${esc(d.bat)}</div>`).join('')}
+function pfInfo(){$('#pfloc').textContent=S.loc?`Locatie: ${S.loc.lat.toFixed(6)} / ${S.loc.lon.toFixed(6)} (${S.loc.place||'?'}), bron ${S.loc.src}`:'Geen locatie gekozen: ga naar het dashboard.';const all=O&&O.d||[];$('#pfobs').innerHTML=all.length?`${all.length} obstakels binnen 8 km, ${all.filter(o=>o.h>50).length} hoger dan 50 m, ${all.filter(o=>o.h==null).length} met onbekende hoogte${O.stale?', <b class="bad">VEROUDERDE gegevens ('+ago(O.t)+')</b>':''}. Bron: OpenStreetMap.`:'Geen obstakelgegevens beschikbaar.'}
+const draft=()=>{S.draft=Object.fromEntries(new FormData($('#pf')));save()};
+function fillForm(v){const f=$('#pf');fillSelects();[...f.elements].forEach(e=>{if(!e.name)return;if(e.type=='checkbox')e.checked=!!v[e.name];else if(v[e.name]!=null)e.value=v[e.name]});pinfo();dinfo()}
+function clearForm(){if(!confirm('Formulier leegmaken?'))return;$('#pf').reset();S.draft=null;save();pinfo();dinfo()}
+function wxSnap(f){const h=hoursOf();if(!h)return null;let i=h.time.findIndex(t=>f.date&&f.start&&t.startsWith(f.date+'T'+f.start.slice(0,2)));if(i<0)i=H;const g=k=>h[k][i];return{time:h.time[i],stale:W.stale,got:ago(W.t),t:g('temperature_2m'),pr:g('precipitation'),pp:g('precipitation_probability'),w10:g('wind_speed_10m'),w80:g('wind_speed_80m'),dir:g('wind_direction_10m'),gust:g('wind_gusts_10m'),vis:g('visibility'),cc:g('cloud_cover')}}
+function savePf(pdf){const fd=Object.fromEntries(new FormData($('#pf')));if(!fd.date||!fd.start||!fd.pilot||!fd.drone){alert('Datum, startuur, piloot en drone zijn verplicht.');return}
+ const l=K&&K.a.d?K.a.d[K.a.d.length-1]:null,all=O&&O.d||[],n=S.reports.length+1;
+ const r={id:`AG-${fd.date.replace(/-/g,'')}-${String(n).padStart(3,'0')}`,created:Date.now(),f:fd,pilot:S.pilots.find(p=>p.id==fd.pilot),drones:[fd.drone,fd.drone2].map(id=>S.drones.find(d=>d.id==id)).filter(Boolean),loc:S.loc,wx:wxSnap(fd),kp:l&&{kp:l.kp,t:l.t,stale:K.a.stale},obs:{n:all.length,stale:O&&O.stale,got:O&&O.t,list:[...all].sort((a,b)=>(b.h??-1)-(a.h??-1)||a.d-b.d).slice(0,25)},status:fd.dg_confirm?'Opgeslagen':'Onvolledig: luchtruimcontrole niet bevestigd'};
+ S.reports.unshift(r);save();renderReports();if(!fd.dg_confirm)alert('Opgeslagen als ONVOLLEDIG: het DroneGuide-bevestigingsvak is niet aangevinkt.');if(pdf)printReport(r)}
+const R=(k,v)=>`<tr><th style="width:32%">${k}</th><td>${esc(v||'-')}</td></tr>`;
+function reportHTML(r){const f=r.f,w=r.wx,p=r.pilot||{};return`<h1>Preflightrapport ${r.id}</h1><div>${esc(S.zone)}. Aangemaakt ${ago(r.created)}. Status: ${esc(r.status)}</div>
+<h2>1. Operationele gegevens</h2><table>${R('Datum',f.date)}${R('Start / einde',f.start+' / '+(f.end||'-'))}${R('Locatie',f.place||(r.loc&&r.loc.place))}${R('GPS',r.loc?r.loc.lat.toFixed(6)+' / '+r.loc.lon.toFixed(6)+' ('+r.loc.src+')':'-')}${R('Type opdracht',f.type)}${R('Omschrijving',f.desc)}</table>
+<h2>2. Piloot en drone(s)</h2><table>${R('Piloot',(p.first||'')+' '+(p.last||'')+', '+(p.fn||''))}${R('Brevetten',(p.certs||[]).map(c=>c.type+' '+c.no+' ['+cst(c)[0]+']').join('; '))}${r.drones.map(d=>R('Drone',`${d.make} ${d.model}, serienr. ${d.serial}, ${d.mtow} g, klasse ${d.cls}, payloads ${d.payloads}, batterijen ${d.bat}, max. wind ${d.maxwind} m/s`)).join('')}</table>
+<h2>3. Weer en Kp-index</h2>${w?`<table>${R('Voorspelling voor',w.time+(w.stale?' (VEROUDERDE gegevens)':''))}${R('Opgehaald',w.got)}${R('Temperatuur',w.t+' °C')}${R('Wind 10 m / 80 m (model)',w.w10+' / '+w.w80+' m/s')}${R('Richting / stoten',w.dir+'° / '+w.gust+' m/s')}${R('Neerslag',w.pr+' mm, kans '+w.pp+'%')}${R('Zicht / bewolking',(w.vis/1000).toFixed(1)+' km / '+w.cc+'%')}${R('Kp-index',r.kp?r.kp.kp+' ('+r.kp.t+' UTC)'+(r.kp.stale?' VEROUDERD':''):'niet beschikbaar')}</table>`:'<p>Geen weerdata beschikbaar bij opslag.</p>'}
+<h2>4. Luchtruim</h2><table>${R('DroneGuide geraadpleegd',f.dg_confirm?'Ja, bevestigd door piloot':'NEE, niet bevestigd')}${R('Controle',f.dg_done+', '+f.dg_time)}${R('Geozone(s)',f.dg_zones)}${R('CTR',f.dg_ctr)}${R('Andere geozones',f.dg_other)}${R('Hoogtebeperking',f.dg_alt)}${R('Voorwaarden',f.dg_cond)}${R('Autorisatie nodig / verkregen',f.dg_need+' / '+f.dg_auth+' '+f.dg_ref)}${R('Opmerkingen / NOTAM',f.dg_rem)}</table>
+<h2>5. Obstakels binnen 8 km (OpenStreetMap, niet volledig of officieel)</h2><p>${r.obs.n} obstakels gevonden${r.obs.stale?' (VEROUDERDE gegevens)':''}. Hoogte wordt enkel getoond indien in de brongegevens aanwezig.</p><table><tr><th>Type</th><th>Naam</th><th>Hoogte</th><th>Afstand</th><th>Bron</th></tr>${r.obs.list.map(o=>`<tr><td>${TY[o.ty][0]}</td><td>${esc(o.name)}</td><td>${o.h==null?'ONBEKEND':o.h+' m'}</td><td>${o.d} m</td><td>OSM</td></tr>`).join('')}</table>
+<h2>6. Risicoanalyse</h2><table>${CK.map((t,i)=>R(t,f['c'+i])).join('')}${R('Opmerkingen',f.ck_rem)}</table>
+<h2>7. Bevestiging</h2><table>${R('Beoordeling',f.assess)}${R('Opmerkingen piloot',f.assess_rem)}${R('Verantwoordelijke',f.resp)}${R('Piloot',(p.first||'')+' '+(p.last||''))}</table><p>Handtekening piloot: ______________________ &nbsp; Handtekening verantwoordelijke: ______________________</p>
+<p style="font-size:9pt">Dit rapport is een voorbereidend hulpmiddel en geeft geen wettelijke toestemming of vluchtvrijgave.</p>`}
+function printReport(r){$('#print').innerHTML=reportHTML(r);setTimeout(()=>print(),150)}
+function renderReports(){const q=($('#rq').value||'').toLowerCase();const l=S.reports.filter(r=>JSON.stringify([r.id,r.f.place,r.pilot&&r.pilot.last,r.drones.map(d=>d.model)]).toLowerCase().includes(q));$('#reports').innerHTML=l.length?`<table><tr><th>Nr.</th><th>Datum</th><th>Locatie</th><th>Piloot</th><th>Drone</th><th>Status</th><th></th></tr>${l.map(r=>`<tr><td>${r.id}</td><td>${r.f.date} ${r.f.start}</td><td>${esc(r.f.place||(r.loc&&r.loc.place)||'')}</td><td>${esc(r.pilot?r.pilot.last:'')}</td><td>${esc(r.drones.map(d=>d.model).join(', '))}</td><td>${esc(r.status)}</td><td><button onclick="printReport(S.reports.find(x=>x.id=='${r.id}'))">PDF</button> <button class="ghost" onclick="dup('${r.id}')">Dupliceer</button></td></tr>`).join('')}</table>`:'<div class="mut">Nog geen rapporten.</div>'}
+function dup(id){fillForm(S.reports.find(r=>r.id==id).f);scrollTo(0,0)}
+/* ---------- back-up ---------- */
+function exportData(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='aeroguard-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click()}
+function importData(f){if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(!Array.isArray(d.pilots))throw 0;if(confirm('Huidige gegevens vervangen door de back-up?')){S={...S,...d};save();location.reload()}}catch(e){alert('Ongeldig back-upbestand.')}})}
+/* ---------- start ---------- */
+$('#tools').innerHTML=TOOLS.map(([n,d,u])=>`<div class="card"><b>${n}</b><div class="mut" style="min-height:38px">${d}</div><a class="btn gold" href="${u}" target="_blank" rel="noopener">OPENEN</a></div>`).join('');
+const refresh=()=>{loadWeather();loadObst();pfInfo()};
+function renderAll(){renderLoc();renderTeam();renderDocs();renderAlerts();renderReports();renderWeather();fillSelects();pinfo();dinfo()}
+renderAll();tab('dash');if(S.draft)fillForm(S.draft);else{const t=new Date();$('#pf').elements.date.value=t.toISOString().slice(0,10)}
+loadKp();if(S.loc)refresh();
+
+/* ---------- toegangsscherm (client-side) ---------- */
+const PH="5ed63a5735545fc8a18c4f464158a625c33c24f9006277bad78fb921a60fd55b";
+const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+let fails=0,waitUntil=0,idle;
+function bump(){clearTimeout(idle);idle=setTimeout(lock,30*60*1000)}
+function unlock(){document.body.classList.remove('locked');if(map)map.invalidateSize();bump()}
+function lock(){sessionStorage.removeItem('ag_ok');document.body.classList.add('locked');$('#pw').value='';clearTimeout(idle)}
+['click','keydown','touchstart'].forEach(e=>addEventListener(e,()=>{if(!document.body.classList.contains('locked'))bump()},{passive:true}));
+async function doLogin(e){e.preventDefault();const er=$('#lerr');if(!window.crypto||!crypto.subtle){er.textContent='Open de website via https om in te loggen.';return false}
+ const w=Math.ceil((waitUntil-Date.now())/1000);if(w>0){er.textContent='Wacht '+w+' s voor een nieuwe poging.';return false}
+ if(await sha('aeroguard:'+$('#pw').value)===PH){fails=0;sessionStorage.setItem('ag_ok','1');er.textContent='';unlock()}else{fails++;waitUntil=Date.now()+Math.min(30,fails*2)*1000;er.textContent='Onjuist paswoord.';$('#pw').select()}return false}
+if(sessionStorage.getItem('ag_ok'))unlock();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
